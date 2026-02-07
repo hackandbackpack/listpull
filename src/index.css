@@ -1,0 +1,267 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Blast Off Gaming - Space/Rocket Theme Design System */
+
+@layer base {
+  :root {
+    /* Dark cosmic theme - primary palette */
+    --background: 220 20% 6%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 18% 10%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 18% 10%;
+    --popover-foreground: 210 40% 98%;
+
+    /* Electric purple accent - cosmic nebula vibe */
+    --primary: 270 100% 65%;
+    --primary-foreground: 220 20% 6%;
+
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 15% 16%;
+    --muted-foreground: 215 20% 60%;
+
+    --accent: 280 80% 55%;
+    --accent-foreground: 220 20% 6%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    /* Status colors */
+    --success: 142 76% 45%;
+    --success-foreground: 220 20% 6%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 6%;
+
+    --border: 220 15% 18%;
+    --input: 220 15% 14%;
+    --ring: 270 100% 65%;
+
+    --radius: 0.75rem;
+
+    /* Glow effects */
+    --glow-primary: 0 0 40px hsl(270 100% 65% / 0.3);
+    --glow-accent: 0 0 20px hsl(280 80% 55% / 0.2);
+    --glow-card: 0 0 60px hsl(270 100% 65% / 0.1);
+
+    /* Sidebar */
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 270 100% 65%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 220 15% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 270 100% 65%;
+  }
+
+  .dark {
+    /* Same as root - dark mode is default */
+    --background: 220 20% 6%;
+    --foreground: 210 40% 98%;
+    --card: 220 18% 10%;
+    --card-foreground: 210 40% 98%;
+    --popover: 220 18% 10%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 270 100% 65%;
+    --primary-foreground: 220 20% 6%;
+    --secondary: 220 15% 16%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 220 15% 16%;
+    --muted-foreground: 215 20% 60%;
+    --accent: 280 80% 55%;
+    --accent-foreground: 220 20% 6%;
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+    --success: 142 76% 45%;
+    --success-foreground: 220 20% 6%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 220 20% 6%;
+    --border: 220 15% 18%;
+    --input: 220 15% 14%;
+    --ring: 270 100% 65%;
+    --sidebar-background: 220 18% 8%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 270 100% 65%;
+    --sidebar-primary-foreground: 220 20% 6%;
+    --sidebar-accent: 220 15% 16%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 270 100% 65%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--background));
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground));
+  }
+}
+
+@layer components {
+  /* Glow card effect */
+  .glow-card {
+    @apply relative overflow-hidden rounded-xl border border-border bg-card;
+    box-shadow: var(--glow-card);
+  }
+
+  .glow-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      135deg,
+      hsl(var(--primary) / 0.05) 0%,
+      transparent 50%,
+      hsl(var(--accent) / 0.03) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--accent)) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Hero glow button */
+  .btn-glow {
+    @apply relative overflow-hidden;
+    box-shadow: var(--glow-primary);
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 0 60px hsl(270 100% 65% / 0.5);
+    transform: translateY(-2px);
+  }
+
+  /* Status badges */
+  .status-submitted {
+    @apply bg-blue-500/20 text-blue-400 border-blue-500/30;
+  }
+
+  .status-in_progress {
+    @apply bg-yellow-500/20 text-yellow-400 border-yellow-500/30;
+  }
+
+  .status-ready {
+    @apply bg-green-500/20 text-green-400 border-green-500/30;
+  }
+
+  .status-picked_up {
+    @apply bg-purple-500/20 text-purple-400 border-purple-500/30;
+  }
+
+  .status-cancelled {
+    @apply bg-red-500/20 text-red-400 border-red-500/30;
+  }
+
+  /* Cosmic background pattern */
+  .cosmic-bg {
+    background-image: 
+      radial-gradient(ellipse at 10% 20%, hsl(270 100% 65% / 0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 90% 80%, hsl(280 80% 40% / 0.06) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, hsl(var(--background)) 0%, hsl(220 25% 4%) 100%);
+  }
+
+  /* Star particles animation */
+  .stars {
+    background-image: 
+      radial-gradient(2px 2px at 20px 30px, hsl(var(--foreground) / 0.2), transparent),
+      radial-gradient(2px 2px at 40px 70px, hsl(var(--foreground) / 0.15), transparent),
+      radial-gradient(1px 1px at 90px 40px, hsl(var(--foreground) / 0.2), transparent),
+      radial-gradient(2px 2px at 160px 120px, hsl(var(--foreground) / 0.1), transparent),
+      radial-gradient(1px 1px at 230px 80px, hsl(var(--foreground) / 0.15), transparent),
+      radial-gradient(2px 2px at 300px 160px, hsl(var(--foreground) / 0.2), transparent);
+    background-size: 350px 200px;
+    animation: stars-move 100s linear infinite;
+  }
+
+  @keyframes stars-move {
+    from {
+      background-position: 0 0;
+    }
+    to {
+      background-position: 350px 200px;
+    }
+  }
+
+  /* Pulse animation for status */
+  .pulse-glow {
+    animation: pulse-glow 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 20px hsl(270 100% 65% / 0.3);
+    }
+    50% {
+      box-shadow: 0 0 40px hsl(270 100% 65% / 0.5);
+    }
+  }
+}
+
+@layer utilities {
+  /* Animation utilities */
+  .animate-fade-in {
+    animation: fade-in 0.5s ease-out;
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out;
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+}
