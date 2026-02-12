@@ -133,7 +133,6 @@ export default function HelpPage() {
                 <li>📧 Email: {CONFIG.store.email}</li>
                 <li>📞 Phone: {CONFIG.store.phone}</li>
                 <li>📍 Address: {CONFIG.store.address}</li>
-                <li>🕐 Hours: {CONFIG.store.hours}</li>
               </ul>
             </CardContent>
           </Card>

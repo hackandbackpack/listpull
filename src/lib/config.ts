@@ -6,7 +6,6 @@ interface StoreConfig {
   email: string;
   phone: string;
   address: string;
-  hours: string;
 }
 
 interface AppLimits {
@@ -46,7 +45,6 @@ export const CONFIG: Config = {
     email: getEnv('VITE_STORE_EMAIL', 'contact@blastoffgaming.com'),
     phone: getEnv('VITE_STORE_PHONE', '(555) 123-4567'),
     address: getEnv('VITE_STORE_ADDRESS', '123 Main Street, Your City'),
-    hours: getEnv('VITE_STORE_HOURS', 'Mon-Sat 11am-9pm, Sun 12pm-6pm'),
   },
   limits: {
     maxFileSizeMB: getEnvNumber('VITE_MAX_FILE_SIZE_MB', 1),

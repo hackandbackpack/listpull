@@ -26,7 +26,6 @@ CONFIG_FIELDS = [
     ("VITE_STORE_EMAIL", "Store Email", "contact@example.com", False),
     ("VITE_STORE_PHONE", "Store Phone", "(555) 123-4567", False),
     ("VITE_STORE_ADDRESS", "Store Address", "123 Main Street", False),
-    ("VITE_STORE_HOURS", "Store Hours", "Mon-Sat 11am-9pm, Sun 12pm-6pm", False),
     ("VITE_ORDER_PREFIX", "Order Prefix", "LP", False),
     ("VITE_ORDER_HOLD_DAYS", "Order Hold Days", "7", False),
     ("VITE_MAX_FILE_SIZE_MB", "Max File Size (MB)", "1", False),
