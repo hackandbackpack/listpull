@@ -217,8 +217,8 @@ create_config() {
     read -p "Store Email [contact@example.com]: " STORE_EMAIL
     STORE_EMAIL=${STORE_EMAIL:-contact@example.com}
 
-    read -p "Store Phone [(555) 123-4567]: " STORE_PHONE
-    STORE_PHONE=${STORE_PHONE:-(555) 123-4567}
+    read -p "Store Phone [555.123.4567]: " STORE_PHONE
+    STORE_PHONE=${STORE_PHONE:-555.123.4567}
 
     read -p "Store Address [123 Main Street]: " STORE_ADDRESS
     STORE_ADDRESS=${STORE_ADDRESS:-123 Main Street}

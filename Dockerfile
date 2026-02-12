@@ -9,7 +9,7 @@ WORKDIR /app
 # Build arguments for Vite (must be available at build time)
 ARG VITE_STORE_NAME="ListPull"
 ARG VITE_STORE_EMAIL="contact@example.com"
-ARG VITE_STORE_PHONE="(555) 123-4567"
+ARG VITE_STORE_PHONE="555.123.4567"
 ARG VITE_STORE_ADDRESS="123 Main Street"
 ARG VITE_ORDER_PREFIX="LP"
 ARG VITE_ORDER_HOLD_DAYS="7"

@@ -24,7 +24,7 @@ CONFIG_FIELDS = [
     ("JWT_SECRET", "JWT Secret (min 32 chars)", "", True),
     ("VITE_STORE_NAME", "Store Name", "ListPull", False),
     ("VITE_STORE_EMAIL", "Store Email", "contact@example.com", False),
-    ("VITE_STORE_PHONE", "Store Phone", "(555) 123-4567", False),
+    ("VITE_STORE_PHONE", "Store Phone (XXX.XXX.XXXX)", "555.123.4567", False),
     ("VITE_STORE_ADDRESS", "Store Address", "123 Main Street", False),
     ("VITE_ORDER_PREFIX", "Order Prefix", "LP", False),
     ("VITE_ORDER_HOLD_DAYS", "Order Hold Days", "7", False),
