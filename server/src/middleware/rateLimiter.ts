@@ -6,17 +6,30 @@ interface RateLimitRecord {
 }
 
 // In-memory store for rate limiting
+const MAX_STORE_SIZE = 10_000;
 const rateLimitStore = new Map<string, RateLimitRecord>();
 
-// Clean up old entries every 5 minutes
+// Clean up expired entries every 5 minutes
 setInterval(() => {
   const now = Date.now();
-  for (const [key, record] of rateLimitStore.entries()) {
+  for (const [key, record] of rateLimitStore) {
     if (record.resetTime < now) {
       rateLimitStore.delete(key);
     }
   }
 }, 5 * 60 * 1000);
+
+// Evict oldest entries if store exceeds max size
+function evictIfNeeded() {
+  if (rateLimitStore.size <= MAX_STORE_SIZE) return;
+  const entriesToRemove = rateLimitStore.size - MAX_STORE_SIZE + 1000;
+  let removed = 0;
+  for (const key of rateLimitStore.keys()) {
+    if (removed >= entriesToRemove) break;
+    rateLimitStore.delete(key);
+    removed++;
+  }
+}
 
 interface RateLimitOptions {
   windowMs: number;
@@ -45,6 +58,7 @@ export function createRateLimiter(options: RateLimitOptions) {
         resetTime: now + windowMs,
       };
       rateLimitStore.set(key, record);
+      evictIfNeeded();
       return next();
     }
 
