@@ -142,18 +142,17 @@ interface PaginatedOrders {
 }
 
 export function getAllOrders(options: GetOrdersOptions = {}): PaginatedOrders {
+  const sqliteDb = getSqlite();
   const db = getDatabase();
   const { limit = 50, offset = 0, status } = options;
 
-  // Build base query with optional status filter
-  const baseQuery = status
-    ? db.select().from(deckRequests).where(eq(deckRequests.status, status))
-    : db.select().from(deckRequests);
+  // Efficient count using raw SQL instead of fetching all rows
+  const countRow = status
+    ? sqliteDb.prepare('SELECT COUNT(*) as total FROM deck_requests WHERE status = ?').get(status) as { total: number }
+    : sqliteDb.prepare('SELECT COUNT(*) as total FROM deck_requests').get() as { total: number };
+  const total = countRow.total;
 
-  // Get total count
-  const total = baseQuery.all().length;
-
-  // Get paginated results (need to rebuild query for pagination)
+  // Get paginated results
   const orders = status
     ? db.select().from(deckRequests)
         .where(eq(deckRequests.status, status))
