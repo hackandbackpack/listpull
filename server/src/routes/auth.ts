@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { config } from '../config.js';
 import { getDatabase } from '../db/index.js';
-import { users } from '../db/schema.js';
+import { users, tokenBlacklist } from '../db/schema.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
 import { createError } from '../middleware/errorHandler.js';
 import { authRateLimiter } from '../middleware/rateLimiter.js';
@@ -58,10 +58,20 @@ router.post('/login', authRateLimiter, async (req, res, next) => {
 });
 
 // POST /api/auth/logout
-router.post('/logout', requireAuth, (_req, res) => {
-  // JWT is stateless, so logout is handled client-side by removing the token
-  // This endpoint exists for API consistency and future session invalidation
-  res.json({ success: true });
+router.post('/logout', requireAuth, (req: AuthRequest, res) => {
+  const token = req.headers.authorization?.replace('Bearer ', '');
+  if (token) {
+    const db = getDatabase();
+    const decoded = jwt.decode(token) as { exp?: number };
+    const expiresAt = decoded?.exp
+      ? new Date(decoded.exp * 1000).toISOString()
+      : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+    db.insert(tokenBlacklist)
+      .values({ token, expiresAt })
+      .run();
+  }
+  res.json({ message: 'Logged out' });
 });
 
 // GET /api/auth/session

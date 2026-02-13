@@ -69,6 +69,14 @@ export const users = sqliteTable('users', {
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 
+// Token blacklist for logout
+export const tokenBlacklist = sqliteTable('token_blacklist', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  token: text('token').notNull(),
+  expiresAt: text('expires_at').notNull(),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+});
+
 // Parsed condition variant structure
 export interface ConditionVariant {
   condition: string;

@@ -26,6 +26,10 @@ export function initializeDatabase() {
   // Initialize tables
   createTables();
 
+  // Clean up expired tokens on startup and periodically
+  cleanExpiredTokens();
+  setInterval(cleanExpiredTokens, 60 * 60 * 1000);
+
   console.log(`Database initialized at ${config.databasePath}`);
 }
 
@@ -80,6 +84,18 @@ function createTables() {
     )
   `);
 
+  // Create token_blacklist table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS token_blacklist (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL UNIQUE,
+      expires_at TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS idx_token_blacklist_token ON token_blacklist(token);
+    CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires ON token_blacklist(expires_at);
+  `);
+
   // Create indexes
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_deck_requests_order_number ON deck_requests(order_number);
@@ -88,6 +104,11 @@ function createTables() {
     CREATE INDEX IF NOT EXISTS idx_deck_line_items_deck_request_id ON deck_line_items(deck_request_id);
     CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
   `);
+}
+
+function cleanExpiredTokens() {
+  if (!sqlite) return;
+  sqlite.exec(`DELETE FROM token_blacklist WHERE expires_at < datetime('now')`);
 }
 
 export function getDatabase() {

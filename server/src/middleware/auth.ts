@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '../config.js';
 import { getDatabase } from '../db/index.js';
-import { users, UserRole } from '../db/schema.js';
+import { users, tokenBlacklist, UserRole } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
 import { createError } from './errorHandler.js';
 
@@ -34,8 +34,18 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
   try {
     const payload = jwt.verify(token, config.jwtSecret) as JwtPayload;
 
-    // Verify user still exists
+    // Check token blacklist
     const db = getDatabase();
+    const blacklisted = db.select()
+      .from(tokenBlacklist)
+      .where(eq(tokenBlacklist.token, token))
+      .get();
+
+    if (blacklisted) {
+      return next(createError('Token has been revoked', 401, 'TOKEN_REVOKED'));
+    }
+
+    // Verify user still exists
     const user = db.select().from(users).where(eq(users.id, payload.userId)).get();
 
     if (!user) {
