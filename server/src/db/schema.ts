@@ -89,6 +89,19 @@ export const auditLog = sqliteTable('audit_log', {
   createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
 });
 
+// Email queue for reliable delivery
+export const emailQueue = sqliteTable('email_queue', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  orderId: text('order_id').notNull(),
+  recipient: text('recipient').notNull(),
+  template: text('template').notNull(),
+  status: text('status').notNull().default('pending'),
+  attempts: integer('attempts').notNull().default(0),
+  lastError: text('last_error'),
+  createdAt: text('created_at').notNull().$defaultFn(() => new Date().toISOString()),
+  sentAt: text('sent_at'),
+});
+
 // Parsed condition variant structure
 export interface ConditionVariant {
   condition: string;

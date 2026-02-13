@@ -125,6 +125,22 @@ function createTables() {
     CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
   `);
 
+  // Create email_queue table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS email_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      order_id TEXT NOT NULL,
+      recipient TEXT NOT NULL,
+      template TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN ('pending', 'sent', 'failed')),
+      attempts INTEGER NOT NULL DEFAULT 0,
+      last_error TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      sent_at TEXT
+    );
+    CREATE INDEX IF NOT EXISTS idx_email_queue_status ON email_queue(status);
+  `);
+
   // Create indexes
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_deck_requests_order_number ON deck_requests(order_number);

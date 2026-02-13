@@ -13,6 +13,7 @@ import staffRoutes from './routes/staff.js';
 import notificationsRoutes from './routes/notifications.js';
 import proxyRoutes from './routes/proxy.js';
 import { generateCsrfToken } from './middleware/csrf.js';
+import { startEmailProcessor } from './services/emailQueueService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -64,6 +65,9 @@ app.use('/api', generalRateLimiter);
 
 // Initialize database
 initializeDatabase();
+
+// Start email processor
+startEmailProcessor();
 
 // CSRF token endpoint
 app.get('/api/csrf-token', generateCsrfToken);
