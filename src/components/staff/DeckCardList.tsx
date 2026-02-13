@@ -83,6 +83,9 @@ export function DeckCardList({ lineItems, game, deckRequestId, customerName, ord
   useEffect(() => {
     if (!hasPricing || localItems.length === 0) return;
 
+    const abortController = new AbortController();
+    const requestId = Date.now();
+
     const fetchPrices = async () => {
       setLoading(true);
       setError(null);
@@ -97,17 +100,23 @@ export function DeckCardList({ lineItems, game, deckRequestId, customerName, ord
           prices = await fetchPokemonPrices(cardNames);
         }
 
+        // Discard stale response
+        if (abortController.signal.aborted) return;
         setPriceMap(prices);
       } catch (err) {
+        if (abortController.signal.aborted) return;
         console.error('Failed to fetch prices:', err);
         setError('Failed to load card prices');
       } finally {
-        setLoading(false);
+        if (!abortController.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchPrices();
-  }, [localItems, isMagic, isPokemon, hasPricing]);
+    return () => { abortController.abort(); };
+  }, [localItems.length, isMagic, isPokemon, hasPricing]);
 
   // Calculate inventory summary
   const inventorySummary = useMemo(() => {
