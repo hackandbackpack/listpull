@@ -22,8 +22,11 @@ import api from '@/integrations/api/client';
 const submitSchema = z.object({
   customerName: z.string().trim().min(1, 'Name is required').max(100, 'Name too long'),
   email: z.string().trim().email('Invalid email').max(255, 'Email too long'),
-  phone: z.string().trim().max(20, 'Phone too long').optional(),
-  notifyMethod: z.enum(['email', 'sms']),
+  phone: z.string().trim()
+    .min(1, 'Phone number is required')
+    .max(20, 'Phone too long')
+    .regex(/^\d{3}[.\-]?\d{3}[.\-]?\d{4}$/, 'Enter a valid phone number (e.g., 555.867.5309)'),
+  notifyMethod: z.literal('email'),
   game: z.enum(['magic', 'onepiece', 'pokemon', 'other']),
   format: z.string().trim().max(100, 'Format too long').optional(),
   pickupWindow: z.string().trim().max(200, 'Pickup window too long').optional(),
@@ -57,8 +60,6 @@ export default function SubmitPage() {
   });
 
   const rawDecklist = watch('rawDecklist');
-  const phone = watch('phone');
-  const notifyMethod = watch('notifyMethod');
   const selectedGame = watch('game');
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -101,12 +102,6 @@ export default function SubmitPage() {
   const onSubmit = async (data: SubmitFormData) => {
     if (parsedCards.length === 0) {
       toast.error('Please parse your decklist first');
-      return;
-    }
-
-    // Validate SMS requires phone
-    if (data.notifyMethod === 'sms' && !data.phone) {
-      toast.error('Phone number required for SMS notifications');
       return;
     }
 
@@ -196,38 +191,36 @@ export default function SubmitPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Phone (optional)</Label>
+                  <Label htmlFor="phone">Phone *</Label>
                   <Input
                     id="phone"
                     type="tel"
-                    placeholder="+1 (555) 000-0000"
+                    placeholder="555.867.5309"
                     {...register('phone')}
+                    className={errors.phone ? 'border-destructive' : ''}
                   />
+                  {errors.phone && (
+                    <p className="text-sm text-destructive">{errors.phone.message}</p>
+                  )}
                 </div>
 
                 <div className="space-y-3">
                   <Label>Notification Preference</Label>
                   <RadioGroup
-                    value={notifyMethod}
-                    onValueChange={(v) => setValue('notifyMethod', v as 'email' | 'sms')}
+                    defaultValue="email"
                     className="flex gap-6"
                   >
                     <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="email" id="email-notify" />
+                      <RadioGroupItem value="email" id="email-notify" checked />
                       <Label htmlFor="email-notify" className="cursor-pointer">Email</Label>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="sms" id="sms-notify" disabled={!phone} />
-                      <Label htmlFor="sms-notify" className={`cursor-pointer ${!phone ? 'text-muted-foreground' : ''}`}>
-                        SMS {!phone && '(enter phone first)'}
+                    <div className="flex items-center space-x-2 opacity-50">
+                      <RadioGroupItem value="sms" id="sms-notify" disabled />
+                      <Label htmlFor="sms-notify" className="text-muted-foreground">
+                        Text Message (Coming Soon)
                       </Label>
                     </div>
                   </RadioGroup>
-                  {notifyMethod === 'sms' && (
-                    <p className="text-sm text-muted-foreground">
-                      SMS notifications coming soon! We'll use email for now.
-                    </p>
-                  )}
                 </div>
               </CardContent>
             </Card>

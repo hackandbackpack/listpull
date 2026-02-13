@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { createOrder, getOrderByNumberAndEmail, getOrderLineItems } from '../services/orderService.js';
 import { createError } from '../middleware/errorHandler.js';
-import { gameTypes, notifyMethods } from '../db/schema.js';
+import { gameTypes } from '../db/schema.js';
 import { orderSubmitRateLimiter } from '../middleware/rateLimiter.js';
 import { validateCsrf } from '../middleware/csrf.js';
 
@@ -16,15 +16,18 @@ const lineItemSchema = z.object({
 });
 
 const submitOrderSchema = z.object({
-  customerName: z.string().min(1).max(100),
-  email: z.string().email().max(254),
-  phone: z.string().max(20).optional(),
-  notifyMethod: z.enum(notifyMethods).optional(),
+  customerName: z.string().trim().min(1).max(100),
+  email: z.string().trim().email().max(255),
+  phone: z.string().trim()
+    .min(1, 'Phone is required')
+    .max(20)
+    .regex(/^\d{3}[.\-]?\d{3}[.\-]?\d{4}$/),
+  notifyMethod: z.literal('email'),
   game: z.enum(gameTypes),
-  format: z.string().max(100).optional(),
-  pickupWindow: z.string().max(100).optional(),
-  notes: z.string().max(2000).optional(),
-  rawDecklist: z.string().min(1).max(50000),
+  format: z.string().trim().max(100).optional(),
+  pickupWindow: z.string().trim().max(200).optional(),
+  notes: z.string().trim().max(1000).optional(),
+  rawDecklist: z.string().trim().min(1).max(50000),
   lineItems: z.array(lineItemSchema).min(1).max(500),
 });
 
