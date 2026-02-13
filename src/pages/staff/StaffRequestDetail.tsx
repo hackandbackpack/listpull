@@ -93,7 +93,7 @@ export default function StaffRequestDetail() {
   };
 
   const handleSave = async () => {
-    if (!id || !request) return;
+    if (!id || !request || saving) return;
 
     setSaving(true);
     const previousStatus = request.status;
@@ -101,25 +101,25 @@ export default function StaffRequestDetail() {
     try {
       await api.staff.updateOrder(id, { status, staffNotes });
 
-      // Send notification email when status changes to "ready"
+      // Update local state with server-confirmed status
+      setRequest(prev => prev ? { ...prev, status, staff_notes: staffNotes } : null);
+
+      // Send notification based on server-confirmed previous status
       if (status === 'ready' && previousStatus !== 'ready') {
         try {
           await api.notifications.send(id, 'ready');
-          toast.success('Saved! Customer notified by email.');
+          toast.success('Order updated. Customer notified by email.');
         } catch {
-          toast.warning('Saved, but notification email failed to send');
+          toast.error('Order updated but notification failed');
         }
       } else {
-        toast.success('Saved!');
+        toast.success('Order updated');
       }
-
-      // Update local state
-      setRequest(prev => prev ? { ...prev, status, staff_notes: staffNotes } : null);
     } catch {
-      toast.error('Failed to save');
+      toast.error('Failed to update order');
+    } finally {
+      setSaving(false);
     }
-
-    setSaving(false);
   };
 
   if (loading || authLoading) return <div className="min-h-screen flex items-center justify-center cosmic-bg"><span className="text-muted-foreground">Loading...</span></div>;
@@ -158,7 +158,7 @@ export default function StaffRequestDetail() {
           <Card className="glow-card">
             <CardHeader><CardTitle>Update Status</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <Select value={status} onValueChange={(v) => setStatus(v as RequestStatus)}>
+              <Select value={status} onValueChange={(v) => setStatus(v as RequestStatus)} disabled={saving}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {(['submitted', 'in_progress', 'ready', 'picked_up', 'cancelled'] as RequestStatus[]).map(s => (
