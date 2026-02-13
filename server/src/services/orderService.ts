@@ -1,6 +1,6 @@
 import { v4 as uuidv4 } from 'uuid';
 import { eq, and, desc } from 'drizzle-orm';
-import { getDatabase } from '../db/index.js';
+import { getDatabase, getSqlite } from '../db/index.js';
 import { deckRequests, deckLineItems, DeckRequest, DeckLineItem, NewDeckRequest, NewDeckLineItem, GameType, RequestStatus, NotifyMethod } from '../db/schema.js';
 import { config } from '../config.js';
 
@@ -29,55 +29,75 @@ function generateOrderNumber(): string {
   const year = now.getFullYear().toString().slice(-2);
   const month = (now.getMonth() + 1).toString().padStart(2, '0');
   const day = now.getDate().toString().padStart(2, '0');
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // No ambiguous chars (0/O, 1/I)
+  let random = '';
+  for (let i = 0; i < 6; i++) {
+    random += chars[Math.floor(Math.random() * chars.length)];
+  }
   return `${config.orderPrefix}-${year}${month}${day}-${random}`;
 }
 
 export async function createOrder(input: CreateOrderInput): Promise<{ order: DeckRequest; lineItems: DeckLineItem[] }> {
   const db = getDatabase();
-  const now = new Date().toISOString();
-  const orderId = uuidv4();
-  const orderNumber = generateOrderNumber();
+  const sqliteDb = getSqlite();
 
-  // Insert order
-  db.insert(deckRequests).values({
-    id: orderId,
-    orderNumber,
-    customerName: input.customerName,
-    email: input.email.toLowerCase(),
-    phone: input.phone,
-    notifyMethod: input.notifyMethod,
-    game: input.game,
-    format: input.format,
-    pickupWindow: input.pickupWindow,
-    notes: input.notes,
-    rawDecklist: input.rawDecklist,
-    status: 'submitted',
-    createdAt: now,
-    updatedAt: now,
-  }).run();
+  const MAX_RETRIES = 3;
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const now = new Date().toISOString();
+      const orderId = uuidv4();
+      const orderNumber = generateOrderNumber();
 
-  // Insert line items
-  const lineItemIds: string[] = [];
-  for (const item of input.lineItems) {
-    const itemId = uuidv4();
-    lineItemIds.push(itemId);
-    db.insert(deckLineItems).values({
-      id: itemId,
-      deckRequestId: orderId,
-      quantity: item.quantity,
-      cardName: item.cardName,
-      parseConfidence: item.parseConfidence,
-      lineRaw: item.lineRaw,
-      createdAt: now,
-    }).run();
+      const result = sqliteDb.transaction(() => {
+        // Insert order
+        db.insert(deckRequests).values({
+          id: orderId,
+          orderNumber,
+          customerName: input.customerName,
+          email: input.email.toLowerCase(),
+          phone: input.phone,
+          notifyMethod: input.notifyMethod,
+          game: input.game,
+          format: input.format,
+          pickupWindow: input.pickupWindow,
+          notes: input.notes,
+          rawDecklist: input.rawDecklist,
+          status: 'submitted',
+          createdAt: now,
+          updatedAt: now,
+        }).run();
+
+        // Insert line items
+        for (const item of input.lineItems) {
+          const itemId = uuidv4();
+          db.insert(deckLineItems).values({
+            id: itemId,
+            deckRequestId: orderId,
+            quantity: item.quantity,
+            cardName: item.cardName,
+            parseConfidence: item.parseConfidence,
+            lineRaw: item.lineRaw,
+            createdAt: now,
+          }).run();
+        }
+
+        // Fetch the created order and items within transaction
+        const order = db.select().from(deckRequests).where(eq(deckRequests.id, orderId)).get()!;
+        const items = db.select().from(deckLineItems).where(eq(deckLineItems.deckRequestId, orderId)).all();
+
+        return { order, lineItems: items };
+      })();
+
+      return result;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message.includes('UNIQUE constraint') && attempt < MAX_RETRIES - 1) {
+        continue; // Retry with new order number
+      }
+      throw err;
+    }
   }
-
-  // Fetch the created order and items
-  const order = db.select().from(deckRequests).where(eq(deckRequests.id, orderId)).get()!;
-  const items = db.select().from(deckLineItems).where(eq(deckLineItems.deckRequestId, orderId)).all();
-
-  return { order, lineItems: items };
+  throw new Error('Failed to generate unique order number');
 }
 
 export function getOrderByNumberAndEmail(orderNumber: string, email: string): DeckRequest | undefined {
