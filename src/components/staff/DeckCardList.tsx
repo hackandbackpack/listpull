@@ -311,8 +311,8 @@ export function DeckCardList({ lineItems, game, deckRequestId, customerName, ord
     }
   };
 
-  // Render a single card item
-  const renderCardItem = (item: DeckLineItem) => {
+  // Render a single card item (memoized to prevent unnecessary re-renders)
+  const renderCardItem = useCallback((item: DeckLineItem) => {
     const cardPriceData = priceMap.get(item.card_name.toLowerCase());
     const inv = inventoryState.get(item.id);
     return (
@@ -333,7 +333,7 @@ export function DeckCardList({ lineItems, game, deckRequestId, customerName, ord
         onConditionVariantsChange={handleConditionVariantsChange}
       />
     );
-  };
+  }, [priceMap, inventoryState, loading, game, handleSaveCard, handleQuantityFoundChange, handleUnitPriceChange, handleConditionVariantsChange]);
 
   return (
     <Card className="glow-card">
