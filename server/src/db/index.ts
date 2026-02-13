@@ -27,8 +27,8 @@ export function initializeDatabase() {
   createTables();
 
   // Clean up expired tokens on startup and periodically
-  cleanExpiredTokens();
-  setInterval(cleanExpiredTokens, 60 * 60 * 1000);
+  cleanExpiredRecords();
+  setInterval(cleanExpiredRecords, 60 * 60 * 1000);
 
   console.log(`Database initialized at ${config.databasePath}`);
 }
@@ -96,6 +96,18 @@ function createTables() {
     CREATE INDEX IF NOT EXISTS idx_token_blacklist_expires ON token_blacklist(expires_at);
   `);
 
+  // Create login_attempts table
+  sqlite.exec(`
+    CREATE TABLE IF NOT EXISTS login_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT NOT NULL,
+      attempted_at TEXT NOT NULL DEFAULT (datetime('now')),
+      success INTEGER NOT NULL DEFAULT 0
+    );
+    CREATE INDEX IF NOT EXISTS idx_login_attempts_email ON login_attempts(email);
+    CREATE INDEX IF NOT EXISTS idx_login_attempts_time ON login_attempts(attempted_at);
+  `);
+
   // Create indexes
   sqlite.exec(`
     CREATE INDEX IF NOT EXISTS idx_deck_requests_order_number ON deck_requests(order_number);
@@ -106,9 +118,10 @@ function createTables() {
   `);
 }
 
-function cleanExpiredTokens() {
+function cleanExpiredRecords() {
   if (!sqlite) return;
   sqlite.exec(`DELETE FROM token_blacklist WHERE expires_at < datetime('now')`);
+  sqlite.exec(`DELETE FROM login_attempts WHERE attempted_at < datetime('now', '-1 day')`);
 }
 
 export function getDatabase() {
