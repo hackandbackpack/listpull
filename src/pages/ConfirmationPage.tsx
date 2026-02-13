@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Copy, Mail, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -52,13 +52,9 @@ function mapApiItemsToFrontend(apiItems: {
 
 export default function ConfirmationPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
-  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
 
-  // Try URL param first (for backwards compat), then sessionStorage
-  const emailFromUrl = searchParams.get('email');
-  const emailFromStorage = orderNumber ? sessionStorage.getItem(`order_email_${orderNumber}`) : null;
-  const email = emailFromUrl || emailFromStorage;
+  const email = sessionStorage.getItem('confirmationEmail');
 
   const [request, setRequest] = useState<DeckRequest | null>(null);
   const [lineItems, setLineItems] = useState<DeckLineItem[]>([]);
@@ -91,25 +87,19 @@ export default function ConfirmationPage() {
   }, [orderNumber, email]);
 
   useEffect(() => {
-    if (!orderNumber || !email) {
-      // Redirect to status page if email is missing (security requirement)
-      if (orderNumber) {
-        navigate(`/status?order=${orderNumber}`, { replace: true });
-      } else {
-        navigate('/status', { replace: true });
-      }
+    if (!orderNumber) {
+      navigate('/', { replace: true });
       return;
     }
 
-    // If email was in URL, store it in sessionStorage and clean URL
-    if (emailFromUrl && orderNumber) {
-      sessionStorage.setItem(`order_email_${orderNumber}`, emailFromUrl);
-      // Remove email from URL for privacy
-      navigate(`/confirmation/${orderNumber}`, { replace: true });
+    if (!email) {
+      // Email not in session — user may have navigated directly
+      setLoading(false);
+      return;
     }
 
     fetchOrder();
-  }, [orderNumber, email, emailFromUrl, navigate, fetchOrder]);
+  }, [orderNumber, email, navigate, fetchOrder]);
 
   const copyOrderNumber = () => {
     navigator.clipboard.writeText(orderNumber || '');

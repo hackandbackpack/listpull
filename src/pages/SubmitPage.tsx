@@ -135,8 +135,8 @@ export default function SubmitPage() {
       });
 
       toast.success('Decklist submitted successfully!');
-      // Pass email in URL for secure confirmation page access
-      navigate(`/confirmation/${result.orderNumber}?email=${encodeURIComponent(data.email)}`);
+      sessionStorage.setItem('confirmationEmail', data.email);
+      navigate(`/confirmation/${result.orderNumber}`);
     } catch (error) {
       console.error('Submit error:', error);
       toast.error('Failed to submit decklist. Please try again.');
