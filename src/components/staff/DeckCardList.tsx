@@ -221,36 +221,48 @@ export function DeckCardList({ lineItems, game, deckRequestId, customerName, ord
     setSaving(true);
 
     try {
-      // Update all line items with inventory data
+      // Build update requests for all items
       const updates = localItems.map(item => {
         const inv = inventoryState.get(item.id);
         const variants = inv?.conditionVariants || [];
-        return api.staff.updateLineItem(deckRequestId, item.id, {
-          quantityFound: inv?.quantityFound ?? undefined,
-          unitPrice: inv?.unitPrice ?? undefined,
-          conditionVariants: variants.length > 0 ? JSON.stringify(variants) : undefined,
+        return {
+          id: item.id,
+          promise: api.staff.updateLineItem(deckRequestId, item.id, {
+            quantityFound: inv?.quantityFound ?? undefined,
+            unitPrice: inv?.unitPrice ?? undefined,
+            conditionVariants: variants.length > 0 ? JSON.stringify(variants) : undefined,
+          }),
+        };
+      });
+
+      const results = await Promise.allSettled(updates.map(u => u.promise));
+
+      const failures = results.filter(r => r.status === 'rejected');
+
+      if (failures.length === 0) {
+        // Calculate totals for the deck_requests table
+        const estimatedTotal = inventorySummary.hasAnyPrice ? inventorySummary.manualTotal : undefined;
+        const missingItems = inventorySummary.missingItemsList.length > 0
+          ? inventorySummary.missingItemsList.join(', ')
+          : undefined;
+
+        await api.staff.updateOrder(deckRequestId, {
+          estimatedTotal,
+          missingItems,
         });
-      });
 
-      await Promise.all(updates);
-
-      // Calculate totals for the deck_requests table
-      const estimatedTotal = inventorySummary.hasAnyPrice ? inventorySummary.manualTotal : undefined;
-      const missingItems = inventorySummary.missingItemsList.length > 0
-        ? inventorySummary.missingItemsList.join(', ')
-        : undefined;
-
-      // Update the deck request with summary
-      await api.staff.updateOrder(deckRequestId, {
-        estimatedTotal,
-        missingItems,
-      });
-
-      toast.success('Inventory saved');
-      onInventorySaved?.(estimatedTotal ?? null, missingItems ?? null);
+        toast.success(`Saved ${updates.length} card${updates.length === 1 ? '' : 's'}`);
+        onInventorySaved?.(estimatedTotal ?? null, missingItems ?? null);
+      } else if (failures.length === updates.length) {
+        toast.error('Failed to save all changes. Check your connection and try again.');
+      } else {
+        const savedCount = updates.length - failures.length;
+        toast.warning(`Saved ${savedCount} cards, but ${failures.length} failed. Try saving again.`);
+        onInventorySaved?.(null, null);
+      }
     } catch (err) {
       console.error('Failed to save inventory:', err);
-      toast.error('Failed to save inventory');
+      toast.error('Unexpected error saving inventory');
     } finally {
       setSaving(false);
     }
