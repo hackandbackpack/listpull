@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Save, Loader2, Mail, Phone, Clock } from 'lucide-react';
+import { ArrowLeft, Save, Loader2, Mail, Phone, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -59,6 +59,7 @@ export default function StaffRequestDetail() {
   const [request, setRequest] = useState<DeckRequest | null>(null);
   const [lineItems, setLineItems] = useState<DeckLineItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [status, setStatus] = useState<RequestStatus>('submitted');
   const [staffNotes, setStaffNotes] = useState('');
@@ -75,6 +76,7 @@ export default function StaffRequestDetail() {
 
   const fetchRequest = async () => {
     if (!id) return;
+    setError(null);
 
     try {
       const { order, lineItems: items } = await api.staff.getOrder(id);
@@ -84,9 +86,10 @@ export default function StaffRequestDetail() {
       setStaffNotes(req.staff_notes || '');
       setLineItems(mapApiItemsToFrontend(items));
     } catch {
-      toast.error('Failed to load request');
+      setError('Failed to load order details. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSave = async () => {
@@ -120,6 +123,13 @@ export default function StaffRequestDetail() {
   };
 
   if (loading || authLoading) return <div className="min-h-screen flex items-center justify-center cosmic-bg"><span className="text-muted-foreground">Loading...</span></div>;
+  if (error) return (
+    <div className="min-h-screen flex flex-col items-center justify-center cosmic-bg gap-4">
+      <AlertCircle className="h-8 w-8 text-destructive" />
+      <p className="text-muted-foreground">{error}</p>
+      <Button variant="outline" onClick={fetchRequest}>Try Again</Button>
+    </div>
+  );
   if (!request) return <div className="min-h-screen flex items-center justify-center cosmic-bg"><span>Request not found</span></div>;
 
   return (

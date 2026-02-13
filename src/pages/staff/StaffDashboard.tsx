@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   Rocket, LogOut, Search, Filter, RefreshCw,
-  ClipboardList, Clock, CheckCircle2, Package
+  ClipboardList, Clock, CheckCircle2, Package, AlertCircle
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -45,6 +45,7 @@ export default function StaffDashboard() {
   const { user, isStaff, isAdmin, signOut, loading: authLoading } = useAuth();
   const [requests, setRequests] = useState<DeckRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
@@ -65,15 +66,16 @@ export default function StaffDashboard() {
 
   const fetchRequests = async () => {
     setLoading(true);
+    setError(null);
 
     try {
       const response = await api.staff.getOrders({ limit: 100 });
       setRequests(mapApiOrdersToFrontend(response.orders));
     } catch {
-      toast.error('Failed to load requests');
+      setError('Failed to load orders. Please try again.');
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   const handleSignOut = async () => {
@@ -205,7 +207,13 @@ export default function StaffDashboard() {
             <CardTitle>Deck Pull Requests</CardTitle>
           </CardHeader>
           <CardContent>
-            {loading ? (
+            {error ? (
+              <div className="flex flex-col items-center gap-4 py-12">
+                <AlertCircle className="h-8 w-8 text-destructive" />
+                <p className="text-muted-foreground">{error}</p>
+                <Button variant="outline" onClick={fetchRequests}>Try Again</Button>
+              </div>
+            ) : loading ? (
               <div className="text-center py-12 text-muted-foreground">
                 Loading requests...
               </div>

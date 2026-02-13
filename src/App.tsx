@@ -14,6 +14,7 @@ import StaffLoginPage from "./pages/staff/StaffLoginPage";
 import StaffDashboard from "./pages/staff/StaffDashboard";
 import StaffRequestDetail from "./pages/staff/StaffRequestDetail";
 import NotFound from "./pages/NotFound";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
@@ -31,8 +32,16 @@ const App = () => (
             <Route path="/status" element={<StatusPage />} />
             <Route path="/help" element={<HelpPage />} />
             <Route path="/staff/login" element={<StaffLoginPage />} />
-            <Route path="/staff/dashboard" element={<StaffDashboard />} />
-            <Route path="/staff/request/:id" element={<StaffRequestDetail />} />
+            <Route path="/staff/dashboard" element={
+              <ErrorBoundary fallbackMessage="The dashboard encountered an error.">
+                <StaffDashboard />
+              </ErrorBoundary>
+            } />
+            <Route path="/staff/request/:id" element={
+              <ErrorBoundary fallbackMessage="Failed to load order details.">
+                <StaffRequestDetail />
+              </ErrorBoundary>
+            } />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
