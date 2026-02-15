@@ -85,10 +85,10 @@ const getItemsSchema = z.object({
 // GET /api/orders/:id/items - Get line items for an order (requires email verification)
 router.get('/:id/items', lookupRateLimiter, (req, res, next) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const { email } = getItemsSchema.parse(req.query);
 
-    const lineItems = getOrderLineItems(id, email as string);
+    const lineItems = getOrderLineItems(id, email);
     res.json({ lineItems });
   } catch (err) {
     next(err);
